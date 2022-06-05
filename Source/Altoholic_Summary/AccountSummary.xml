@@ -18,10 +18,15 @@
 					<OnVerticalScroll>
 						self:OnVerticalScroll(offset, 18, Altoholic.Summary.Update)
 					</OnVerticalScroll>
+					<OnHorizontalScroll>
+						self:OnHorizontalScroll(offset, 1, Altoholic.Summary.Update)
+					</OnHorizontalScroll>
 				</Scripts>
 				<KeyValues>
 					<KeyValue key="numRows" value="14" type="number" />
 					<KeyValue key="rowHeight" value="18" type="number" />
+					<KeyValue key="childWidth" value="758" type="number" />
+					<KeyValue key="frameWidth" value="555" type="number" />
 					<KeyValue key="rowTemplate" value="AltoSummaryPaneRowTemplate" />
 				</KeyValues>
 			</ScrollFrame>

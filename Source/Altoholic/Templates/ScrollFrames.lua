@@ -18,8 +18,16 @@ addon:Controller("AltoholicUI.UIPanelScrollFrame", {
 		scrollBar.ScrollUpButton:Disable()
 		scrollBar:SetMinMaxValues(0, 0)
 		scrollBar:SetValue(0)
+
+		local horScrollBar = frame.HorScrollBar
+
+		horScrollBar.ScrollLeftButton:Disable()
+		horScrollBar.ScrollRightButton:Disable()
+		horScrollBar:SetMinMaxValues(0, 0)
+		horScrollBar:SetValue(0)
 		
 		frame.offset = 0
+		frame.horOffset = 0
 		
 		if frame.scrollBarHideable then
 			scrollBar:Hide()
@@ -31,9 +39,21 @@ addon:Controller("AltoholicUI.UIPanelScrollFrame", {
 			scrollBar.ScrollDownButton:Show()
 			scrollBar.ScrollUpButton:Show()
 		end
+
+		if frame.scrollBarHideable then
+			horScrollBar:Hide()
+			horScrollBar.ScrollLeftButton:Hide()
+			horScrollBar.ScrollRightButton:Hide()
+		else
+			horScrollBar.ScrollLeftButton:Disable()
+			horScrollBar.ScrollRightButton:Disable()
+			horScrollBar.ScrollLeftButton:Show()
+			horScrollBar.ScrollRightButton:Show()
+		end
 		
 		if frame.noScrollThumb then
 			scrollBar.ThumbTexture:Hide()
+			horScrollBar.ThumbTexture:Hide()
 		end
 		
 		if not frame.numRows or not frame.rowTemplate then 
@@ -66,27 +86,46 @@ addon:Controller("AltoholicUI.UIPanelScrollFrame", {
 	SetOffset = function(frame, offset)
 		frame.offset = offset
 	end,
+	GetHorOffset = function(frame)
+		return frame.horOffset
+	end,
+	SetHorOffset = function(frame, horOffset)
+		frame.horOffset = horOffset
+	end,
 	OnScrollRangeChanged = function(frame, xrange, yrange)
 		local scrollBar = frame.ScrollBar
+		local horScrollBar = frame.HorScrollBar
 		-- print(format("OnScrollRangeChanged() xrange: %d, yrange: %d, scrollbar value: %d, height: %d"
 			-- , xrange, yrange, scrollBar:GetValue(), scrollBar:GetHeight()))
 		
 		if ( not yrange ) then
 			yrange = frame:GetVerticalScrollRange()
 		end
+		if ( not xrange ) then
+			xrange = frame:GetHorizontalScrollRange()
+		end
 
 		-- hard limit the YRange
 		if scrollBar.maxYRange and yrange > scrollBar.maxYRange then 
 			yrange = scrollBar.maxYRange
+		end
+		if horScrollBar.maxXRange and xrange > horScrollBar.maxXRange then
+			xrange = horScrollBar.maxXRange
 		end
 		
 		local value = scrollBar:GetValue()
 		if ( value > yrange ) then
 			value = yrange
 		end
+		local xvalue = horScrollBar:GetValue()
+		if ( xvalue > xrange ) then
+			xvalue = xrange
+		end
 		
 		scrollBar:SetMinMaxValues(0, yrange)
 		scrollBar:SetValue(value)
+		horScrollBar:SetMinMaxValues(0, xrange)
+		horScrollBar:SetValue(xvalue)
 		
 		-- If the scrollbar must be hidden, just hide it and stop
 		if frame.scrollBarHideable then
@@ -94,6 +133,11 @@ addon:Controller("AltoholicUI.UIPanelScrollFrame", {
 			scrollBar.ScrollDownButton:Hide()
 			scrollBar.ScrollUpButton:Hide()
 			scrollBar.ThumbTexture:Hide()
+
+			horScrollBar:Hide()
+			horScrollBar.ScrollLeftButton:Hide()
+			horScrollBar.ScrollRightButton:hide()
+			horScrollBar.ThumbTexture:Hide()
 			return
 		end
 		
@@ -129,11 +173,42 @@ addon:Controller("AltoholicUI.UIPanelScrollFrame", {
 				scrollBar.ScrollDownButton:Disable()
 			end
 		end
+
+		if ( floor(xrange) == 0 ) then
+			if ( frame.scrollBarHideable ) then
+			
+			else
+				horScrollBar.ScrollLeftButton:Disable()
+				horScrollBar.ScrollRightButton:Disable()
+				horScrollBar.ScrollLeftButton:Show()
+				horScrollBar.ScrollRightButton:Show()
+
+				if ( not frame.noScrollThumb ) then
+					horScrollBar.ThumbTexture:Show()
+				end
+			end
+		else
+			horScrollBar.ScrollLeftButton:Show()
+			horScrollBar.ScrollRightButton:Show()
+			horScrollBar:Show()
+
+			if ( not frame.noScrollThumb ) then
+				horScrollBar.ThumbTexture:Show()
+			end
+
+			if ( xrange - xvalue > 0.005 ) then
+				horScrollBar.ScrollLeftButton:Enable()
+			else
+				horScrollBar.ScrollLeftButton:Disable()
+			end
+		end
 		
 		-- Hide/show scrollframe borders
 		local top = frame.Top
 		local bottom = frame.Bottom
 		local middle = frame.Middle
+		local left = frame.Left
+		local right = frame.Right
 		
 		if top and bottom and frame.scrollBarHideable then
 			if ( frame:GetVerticalScrollRange() == 0 ) then
@@ -144,9 +219,19 @@ addon:Controller("AltoholicUI.UIPanelScrollFrame", {
 				bottom:Show()
 			end
 		end
+
+		if left and right and frame.scrollBarHideable then
+			if ( frame:GetHorizontalScrollRange() == 0 ) then
+				left:Hide()
+				right:Hide()
+			else
+				left:Show()
+				right:Show()
+			end
+		end
 		
 		if middle and frame.scrollBarHideable then
-			if ( frame:GetVerticalScrollRange() == 0 ) then
+			if ( frame:GetVerticalScrollRange() == 0 and frame:GetHorizontalScrollRange() == 0 ) then
 				middle:Hide()
 			else
 				middle:Show()
@@ -176,6 +261,15 @@ addon:Controller("AltoholicUI.UIPanelScrollFrame", {
 			updateFunction(arg1, arg2, arg3)
 		end
 	end,
+	OnHorizontalScroll = function(frame, offset, columnWidth, updateFunction, arg1, arg2, arg3)
+		local horScrollBar = frame.HorScrollBar
+		horScrollBar:SetValue(offset)
+		frame.horOffset = floor((offset / columnWidth) + 0.5)
+
+		if updateFunction then
+			updateFunction(arg1, arg2, arg3)
+		end
+	end,
 	Update = function(frame, numItems, numToDisplay, buttonHeight)
 		-- My own FauxScrollFrame_Update() from SharedUIPanelTemplates.lua
 		-- If more than one screen full of skills then show the scrollbar
@@ -184,17 +278,33 @@ addon:Controller("AltoholicUI.UIPanelScrollFrame", {
 		buttonHeight = buttonHeight or frame.rowHeight
 		
 		local scrollBar = frame.ScrollBar
+		local horScrollBar = frame.HorScrollBar
+
+		local showFrame = false
 
 		if numItems > numToDisplay then
-			frame:Show()
+			showFrame = true
 		else
 			scrollBar:SetValue(0)
+		end
+
+		local scrollChildFrame = frame.ScrollChildFrame
+		local scrollFrameWidth = frame.childWidth or scrollChildFrame:GetWidth()
+		local frameWidth = frame.frameWidth or frame:GetWidth()
+		if (scrollFrameWidth > frameWidth) then
+			showFrame = true
+		else
+			horScrollBar:SetValue(0)
+		end
+
+		if showFrame then
+			frame:Show()
+		else
 			frame:Hide()
 		end
 		
 		if not frame:IsShown() then return end
 		
-		local scrollChildFrame = frame.ScrollChildFrame
 		local scrollFrameHeight = 0
 		local scrollChildHeight = 0
 
@@ -219,6 +329,14 @@ addon:Controller("AltoholicUI.UIPanelScrollFrame", {
 		scrollBar:SetStepsPerPage(numToDisplay-1)
 		scrollChildFrame:SetHeight(scrollChildHeight)
 
+		local maxHorRange = scrollFrameWidth - frameWidth
+		if (maxHorRange < 0) then
+			maxHorRange = 0
+		end
+		horScrollBar:SetMinMaxValues(0, maxHorRange)
+		horScrollBar:SetValueStep(1)
+		horScrollBar:SetStepsPerPage(10)
+		
 		local scrollUpButton = scrollBar.ScrollUpButton
 		local scrollDownButton = scrollBar.ScrollDownButton
 		
@@ -233,6 +351,21 @@ addon:Controller("AltoholicUI.UIPanelScrollFrame", {
 			scrollDownButton:Disable()
 		else
 			scrollDownButton:Enable()
+		end
+
+		local scrollLeftButton = horScrollBar.ScrollLeftButton
+		local scrollRightButton = horScrollBar.ScrollRightButton
+
+		if ( horScrollBar:GetValue() == 0 ) then
+			scrollLeftButton:Disable()
+		else
+			scrollLeftButton:Enable()
+		end
+
+		if ((horScrollBar:GetValue() - scrollFrameWidth) == 0) then
+			scrollRightButton:Disable()
+		else
+			scrollRightButton:Enable()
 		end
 	end,
 	GetRow = function(frame, index)

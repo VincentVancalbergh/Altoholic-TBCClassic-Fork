@@ -625,8 +625,13 @@ columns["Honor"] = {
 	-- Content
 	Width = 100,
 	JustifyH = "RIGHT",
-	GetText = function(character) 
-		return format("%s%s", colors.green, DataStore:GetHonor(character))
+	GetText = function(character)
+		local honor = DataStore:GetHonor(character)
+		if honor == 0 then
+			return format("%s%s", colors.white, honor)
+		else
+			return format("%s%s", colors.green, honor)
+		end
 	end,
 	GetTotal = function(line) return Characters:GetField(line, "honor") end,
 }
@@ -644,7 +649,12 @@ columns["ArenaPoints"] = {
 	Width = 100,
 	JustifyH = "RIGHT",
 	GetText = function(character) 
-		return format("%s%s", colors.green, DataStore:GetArenaPoints(character))
+		local arenaPoints = DataStore:GetArenaPoints(character)
+		if arenaPoints == 0 then
+			return format("%s%s", colors.white, arenaPoints)
+		else
+			return format("%s%s", colors.green, arenaPoints)
+		end
 	end,
 	GetTotal = function(line) return Characters:GetField(line, "arenaPoints") end,
 }
@@ -1505,6 +1515,7 @@ function ns:Update()
 	local scrollFrame = frame.ScrollFrame
 	local numRows = scrollFrame.numRows
 	local offset = scrollFrame:GetOffset()
+	local horOffset = scrollFrame:GetHorOffset()
 
 	local isRealmShown
 	local numVisibleRows = 0
@@ -1530,6 +1541,24 @@ function ns:Update()
 		end
 	end
 	
+	local firstSortButton = container["Sort1"]
+	local minLeft = container:GetLeft()
+	local maxRight = AltoholicFrame:GetRight()
+	if (firstSortButton) then
+		firstSortButton:ClearAllPoints()
+		firstSortButton:SetPoint("TOPLEFT", -horOffset, 0)
+		for i = 1, #currentMode do
+			local sortButton = container["Sort"..i]
+			sortButton:Show()
+			if sortButton:GetLeft() < minLeft then
+				sortButton:Hide()
+			end
+			if sortButton:GetRight() > maxRight then
+				sortButton:Hide()
+			end
+		end
+	end
+
 	local rowIndex = 1
 	local item
 	
@@ -1560,16 +1589,16 @@ function ns:Update()
 				else
 					isRealmShown = false
 				end
-				rowFrame:DrawRealmLine(line, realm, account, Name_OnClick)
+				rowFrame:DrawRealmLine(line, realm, account, Name_OnClick, horOffset)
 			
 				rowIndex = rowIndex + 1
 				numVisibleRows = numVisibleRows + 1
 				numDisplayedRows = numDisplayedRows + 1
 			elseif isRealmShown then
 				if (lineType == INFO_CHARACTER_LINE) then
-					rowFrame:DrawCharacterLine(line, columns, currentMode)
+					rowFrame:DrawCharacterLine(line, columns, currentMode, horOffset)
 				elseif (lineType == INFO_TOTAL_LINE) then
-					rowFrame:DrawTotalLine(line, columns, currentMode)
+					rowFrame:DrawTotalLine(line, columns, currentMode, horOffset)
 				end
 
 				rowIndex = rowIndex + 1

@@ -87,8 +87,9 @@ addon:Controller("AltoholicUI.SummaryPaneRow", {
 			frame["Item"..i]:Hide()
 		end
 	end,
-	DrawRealmLine = function(frame, line, realm, account, Name_OnClick)
+	DrawRealmLine = function(frame, line, realm, account, Name_OnClick, horOffset)
 		local item = frame.Item1
+		horOffset = horOffset or 0
 		
 		item:SetWidth(300)
 		item:SetPoint("TOPLEFT", 25, 0)
@@ -111,15 +112,24 @@ addon:Controller("AltoholicUI.SummaryPaneRow", {
 		frame:SetID(line)
 		frame:Show()
 	end,
-	DrawCharacterLine = function(frame, line, columns, currentMode)
+	DrawCharacterLine = function(frame, line, columns, currentMode, horOffset)
 		local character = DataStore:GetCharacter( addon.Characters:GetInfo(line) )
+		horOffset = horOffset or 0
 		
 		frame.Collapse:Hide()
-		frame.Item1:SetPoint("TOPLEFT", 10, 0)
+		local currX = 10 - horOffset
+		frame.Item1:SetPoint("TOPLEFT", currX, 0)
 
 		-- fill the visible cells for this mode
 		for i = 1, #currentMode do
 			frame["Item"..i]:SetColumnData(character, columns[currentMode[i]])
+			if (currX < 0) then
+				frame["Item"..i]:Hide()
+			end
+			currX = currX + frame["Item"..i]:GetWidth()
+			if (currX > 615) then
+				frame["Item"..i]:Hide()
+			end
 		end
 		
 		frame.character = character
@@ -127,16 +137,25 @@ addon:Controller("AltoholicUI.SummaryPaneRow", {
 		frame:SetID(line)
 		frame:Show()
 	end,
-	DrawTotalLine = function(frame, line, columns, currentMode)
+	DrawTotalLine = function(frame, line, columns, currentMode, horOffset)
+		horOffset = horOffset or 0
+
 		frame.Collapse:Hide()
+		local currX = 10 - horOffset
+		frame.Item1:SetPoint("TOPLEFT", currX, 0)
+		frame.Item1:SetScript("OnEnter", ShowTotals)
 
 		-- fill the visible cells for this mode
 		for i = 1, #currentMode do
 			frame["Item"..i]:SetColumnTotal(line, columns[currentMode[i]])
+			if (currX < 0) then
+				frame["Item"..i]:Hide()
+			end
+			currX = currX + frame["Item"..i]:GetWidth()
+			if (currX > 615) then
+				frame["Item"..i]:Hide()
+			end
 		end
-
-		frame.Item1:SetPoint("TOPLEFT", 10, 0)
-		frame.Item1:SetScript("OnEnter", ShowTotals)
 		
 		frame.character = nil
 		frame:HideItems(#currentMode+1, 10)
