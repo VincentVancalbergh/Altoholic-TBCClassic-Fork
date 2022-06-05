@@ -62,6 +62,8 @@ end
 local collapsedRealms = {}
 
 local totalMoney
+local totalHonor
+local totalArenaPoints
 local totalPlayed
 local totalLevels
 local realmCount
@@ -77,6 +79,8 @@ local function AddRealm(AccountName, RealmName)
 	end
 
 	local realmMoney = 0
+	local realmHonor = 0
+	local realmArenaPoints = 0
 	local realmPlayed = 0
 	local realmLevels = 0
 	local realmBagSlots = 0
@@ -111,9 +115,9 @@ local function AddRealm(AccountName, RealmName)
 	for characterName, character in pairs(DataStore:GetCharacters(RealmName, AccountName)) do
 		shouldAddCharacter = true
 	
-		local characterLevel = DataStore:GetCharacterLevel(character)
-		local characterFaction = DataStore:GetCharacterFaction(character)
-		local _, characterClass = DataStore:GetCharacterClass(character)
+		local characterLevel = DataStore:GetCharacterLevel(character) or 0
+		local characterFaction = DataStore:GetCharacterFaction(character) or 'Horde'
+		local _, characterClass = DataStore:GetCharacterClass(character) or CLASS_SORT_ORDER[class]
 		
 		if (characterLevel < minLevel) then shouldAddCharacter = false end
 		if (characterLevel > maxLevel) then shouldAddCharacter = false end
@@ -164,6 +168,8 @@ local function AddRealm(AccountName, RealmName)
 		if shouldAddCharacter then
 			realmLevels = realmLevels + (DataStore:GetCharacterLevel(character) or 0)
 			realmMoney = realmMoney + (DataStore:GetMoney(character) or 0)
+			realmHonor = realmHonor + (DataStore:GetHonor(character) or 0)
+			realmArenaPoints = realmArenaPoints + (DataStore:GetArenaPoints(character) or 0)
 			realmPlayed = realmPlayed + (DataStore:GetPlayTime(character) or 0)
 			
 			realmBagSlots = realmBagSlots + (DataStore:GetNumBagSlots(character) or 0)
@@ -181,6 +187,8 @@ local function AddRealm(AccountName, RealmName)
 	table.insert(characterList, { linetype = INFO_TOTAL_LINE + realmOffset,
 		level = colors.white .. realmLevels,
 		money = realmMoney,
+		honor = realmHonor,
+		arenaPoints = realmArenaPoints,
 		played = Altoholic:GetTimeString(realmPlayed),
 		bagSlots = realmBagSlots,
 		freeBagSlots = realmFreeBagSlots,
@@ -190,6 +198,8 @@ local function AddRealm(AccountName, RealmName)
 	} )
 
 	totalMoney = totalMoney + realmMoney
+	totalHonor = totalHonor + realmHonor
+	totalArenaPoints = totalArenaPoints + realmArenaPoints
 	totalPlayed = totalPlayed + realmPlayed
 	totalLevels = totalLevels + realmLevels
 	realmCount = realmCount + 1
@@ -206,6 +216,8 @@ local function BuildList()
 	wipe(characterList)
 	
 	totalMoney = 0
+	totalHonor = 0
+	totalArenaPoints = 0
 	totalPlayed = 0
 	totalLevels = 0
 	realmCount = 0 -- will be required for sorting purposes
@@ -214,6 +226,8 @@ local function BuildList()
 	local levels = format("%s%s |rLv", colors.white, BreakUpLargeNumbers(totalLevels))
 	local gold = format(GOLD_AMOUNT_TEXTURE_STRING, BreakUpLargeNumbers(floor( totalMoney / 10000 )), 13, 13)
 	local played = format("%s%sd", BreakUpLargeNumbers(floor(totalPlayed / 86400)), colors.gold)
+	local honor = format("%s%s |rLv", colors.white, BreakUpLargeNumbers(totalHonor))
+	local arenaPoints = format("%s%s |rLv", colors.white, BreakUpLargeNumbers(totalArenaPoints))
 	
 	local f = AltoholicTabSummary
 	
@@ -221,6 +235,8 @@ local function BuildList()
 	f.TotalLv:SetText(levels)
 	f.TotalGold:SetText(gold)
 	f.TotalPlayed:SetText(played)
+	f.TotalHonor:SetText(honor)
+	f.TotalArenaPoints:SetText(arenaPoints)
 end
 
 local function AddRealmView(AccountName, RealmName)

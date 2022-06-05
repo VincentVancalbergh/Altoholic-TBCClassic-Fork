@@ -57,6 +57,8 @@ local AddonDB_Defaults = {
 				zone = nil,				-- character location
 				subZone = nil,
 				bindLocation = nil,	-- location where the hearthstone is bound to
+				honor = nil,
+				arenaPoints = nil,
 				
 				-- ** XP **
 				XP = nil,				-- current level xp
@@ -130,6 +132,26 @@ local function OnPlayerMoney()
 	addon.ThisCharacter.money = GetMoney()
 end
 
+local function OnPlayerPvPUpdate()
+	local character = addon.ThisCharacter
+	local honorInfo = C_CurrencyInfo.GetCurrencyInfo(Constants.CurrencyConsts.CLASSIC_HONOR_CURRENCY_ID)
+	local arenaInfo = C_CurrencyInfo.GetCurrencyInfo(Constants.CurrencyConsts.CLASSIC_ARENA_POINTS_CURRENCY_ID)
+	if (honorInfo ~= nil) then
+		character.honor = honorInfo.quantity
+	end
+	if (arenaInfo ~= nil) then
+		character.arenaPoints = arenaInfo.quantity
+	end
+end
+
+local function OnCurrencyUpdate(self, event, ...)
+	local currencyID = ...
+	if currencyID == Constants.CurrencyConsts.CLASSIC_HONOR_CURRENCY_ID or
+	   currencyID == Constants.CurrencyConsts.CLASSIC_ARENA_POINTS_CURRENCY_ID then
+		OnPlayerPvPUpdate()
+	end
+end
+
 local function OnPlayerAlive()
 	local character = addon.ThisCharacter
 
@@ -147,6 +169,7 @@ local function OnPlayerAlive()
 	OnPlayerXPUpdate()
 	OnPlayerUpdateResting()
 	OnPlayerGuildUpdate()
+	OnPlayerPvPUpdate()
 end
 
 local function OnPlayerLogout()
@@ -239,6 +262,14 @@ end
 
 local function _GetMoney(character)
 	return character.money or 0
+end
+
+local function _GetHonor(character)
+	return character.honor or 0
+end
+
+local function _GetArenaPoints(character)
+	return character.arenaPoints or 0
 end
 
 local function _GetBindLocation(character)
@@ -383,6 +414,8 @@ local PublicMethods = {
 	GetCharacterGender = _GetCharacterGender,
 	GetLastLogout = _GetLastLogout,
 	GetMoney = _GetMoney,
+	GetHonor = _GetHonor,
+	GetArenaPoints = _GetArenaPoints,
 	GetBindLocation = _GetBindLocation,
 	GetXP = _GetXP,
 	GetXPRate = _GetXPRate,
@@ -411,6 +444,8 @@ function addon:OnInitialize()
 	DataStore:SetCharacterBasedMethod("GetCharacterGender")
 	DataStore:SetCharacterBasedMethod("GetLastLogout")
 	DataStore:SetCharacterBasedMethod("GetMoney")
+	DataStore:SetCharacterBasedMethod("GetHonor")
+	DataStore:SetCharacterBasedMethod("GetArenaPoints")
 	DataStore:SetCharacterBasedMethod("GetBindLocation")
 	DataStore:SetCharacterBasedMethod("GetXP")
 	DataStore:SetCharacterBasedMethod("GetXPRate")
@@ -437,6 +472,10 @@ function addon:OnEnable()
 	addon:RegisterEvent("ZONE_CHANGED_NEW_AREA", ScanPlayerLocation)
 	addon:RegisterEvent("ZONE_CHANGED_INDOORS", ScanPlayerLocation)
 	addon:RegisterEvent("TIME_PLAYED_MSG", OnTimePlayedMsg)					-- register the event if RequestTimePlayed is not called afterwards. If another addon calls it, we want to get the data anyway.
+	addon:RegisterEvent("PLAYER_PVP_KILLS_CHANGED", OnPlayerPvPUpdate)
+	addon:RegisterEvent("PLAYER_PVP_RANK_CHANGED", OnPlayerPvPUpdate)
+	addon:RegisterEvent("ARENA_TEAM_UPDATE", OnPlayerPvPUpdate)
+	addon:RegisterEvent("CURRENCY_DISPLAY_UPDATE", OnCurrencyUpdate)
 	
 	addon:SetupOptions()
 	
@@ -459,4 +498,8 @@ function addon:OnDisable()
 	addon:UnregisterEvent("ZONE_CHANGED_NEW_AREA")
 	addon:UnregisterEvent("ZONE_CHANGED_INDOORS")
 	addon:UnregisterEvent("TIME_PLAYED_MSG")
+	addon:UnregisterEvent("PLAYER_PVP_KILLS_CHANGED")
+	addon:UnregisterEvent("PLAYER_PVP_RANK_CHANGED")
+	addon:UnregisterEvent("ARENA_TEAM_UPDATE")
+	addon:UnregisterEvent("CURRENCY_DISPLAY_UPDATE")
 end

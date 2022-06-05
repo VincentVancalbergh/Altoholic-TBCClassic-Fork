@@ -613,6 +613,42 @@ columns["Money"] = {
 	GetTotal = function(line) return addon:GetMoneyString(Characters:GetField(line, "money"), colors.white) end,
 }
 
+columns["Honor"] = {
+	-- Header
+	headerWidth = 100,
+	headerLabel = L["COLUMN_HONOR_TITLE_SHORT"],
+	tooltipTitle = L["COLUMN_HONOR_TITLE"],
+	tooltipSubTitle = L["COLUMN_HONOR_SUBTITLE"],
+	headerOnClick = function() SortView("Honor") end,
+	headerSort = DataStore.GetHonor,
+	
+	-- Content
+	Width = 100,
+	JustifyH = "RIGHT",
+	GetText = function(character) 
+		return format("%s%s", colors.green, DataStore:GetHonor(character))
+	end,
+	GetTotal = function(line) return Characters:GetField(line, "honor") end,
+}
+
+columns["ArenaPoints"] = {
+	-- Header
+	headerWidth = 100,
+	headerLabel = L["COLUMN_ARENAPOINTS_TITLE_SHORT"],
+	tooltipTitle = L["COLUMN_ARENAPOINTS_TITLE"],
+	tooltipSubTitle = L["COLUMN_ARENAPOINTS_SUBTITLE"],
+	headerOnClick = function() SortView("ArenaPoints") end,
+	headerSort = DataStore.GetArenaPoints,
+	
+	-- Content
+	Width = 100,
+	JustifyH = "RIGHT",
+	GetText = function(character) 
+		return format("%s%s", colors.green, DataStore:GetArenaPoints(character))
+	end,
+	GetTotal = function(line) return Characters:GetField(line, "arenaPoints") end,
+}
+
 columns["Played"] = {
 	-- Header
 	headerWidth = 100,
@@ -1440,7 +1476,7 @@ local function ColumnHeader_OnEnter(frame)
 end
 
 local modes = {
-	[MODE_SUMMARY] = { "Name", "Level", "RestXP", "Money", "Played", "AiL", "LastOnline" },
+	[MODE_SUMMARY] = { "Name", "Level", "RestXP", "Money", "Played", "AiL", "LastOnline", "Honor", "ArenaPoints" },
 	[MODE_BAGS] = { "Name", "Level", "BagSlots", "FreeBagSlots", "BankSlots", "FreeBankSlots" },
 	[MODE_SKILLS] = { "Name", "Level", "Prof1", "Prof2", "ProfCooking", "ProfFirstAid", "ProfFishing" },
 	[MODE_ACTIVITY] = { "Name", "Level", "Mails", "LastMailCheck", "Auctions", "Bids", "AHLastVisit" },

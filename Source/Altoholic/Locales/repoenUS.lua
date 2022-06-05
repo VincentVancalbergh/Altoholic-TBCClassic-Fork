@@ -39,6 +39,13 @@ L["COLUMN_MONEY_SUBTITLE_3"] = "Greed is good"
 L["COLUMN_MONEY_SUBTITLE_4"] = "Can't buy happiness .. but buys loads of mounts !"
 L["COLUMN_MONEY_SUBTITLE_5"] = "Does not grow on World Trees"
 
+L["COLUMN_HONOR_SUBTITLE"] = "Your Honor"
+L["COLUMN_HONOR_TITLE"] = "Honor"
+L["COLUMN_HONOR_TITLE_SHORT"] = "Honor"
+L["COLUMN_ARENAPOINTS_SUBTITLE"] = "Your Arena Points"
+L["COLUMN_ARENAPOINTS_TITLE"] = "Arena Points"
+L["COLUMN_ARENAPOINTS_TITLE_SHORT"] = "Arena Points"
+
 L["COLUMN_PLAYED_TITLE"] = "Total Time Played"
 L["COLUMN_PLAYED_TITLE_SHORT"] = "Played"
 L["COLUMN_PLAYED_SUBTITLE"] = "Click to show/hide real play time"
